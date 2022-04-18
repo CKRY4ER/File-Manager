@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,16 +11,93 @@ namespace File_Manager
     {
         const int WINDOW_WIDTH = 140;
         const int WINDOW_HEIGHT = 45;
+        private static List<string> listCommand;
+        private static string currentDir = Directory.GetCurrentDirectory();
         static void Main(string[] args)
         {
+            listCommand = new List<string>();
             Console.BackgroundColor = ConsoleColor.DarkBlue;
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.Title = "File-Manager";
             Console.SetWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
             Console.SetBufferSize(WINDOW_WIDTH, WINDOW_HEIGHT);
             DrawAllWindow(0, 0);
+            Console.SetCursorPosition(104, WINDOW_HEIGHT - 12);
+            // Console.SetCursorPosition(29, WINDOW_HEIGHT - 8);
+            ProccesEnterComand();
+            Console.ReadLine();
             Console.ReadKey(true);
+            DirectoryInfo a = new DirectoryInfo(currentDir);
         }
+
+        /// <summary>
+        /// Метод отвечает за процесс ввода команды
+        /// </summary>
+        static void ProccesEnterComand()
+        {
+            Console.SetCursorPosition(2, 42);
+            Console.Write(currentDir+">");
+            (int left, int top) = GetCursorPosition();
+            StringBuilder command = new StringBuilder();
+            char key;
+            do
+            {
+                key = Console.ReadKey().KeyChar;
+                if (key != (char)8 && key != (char)13)
+                {
+                    command.Append(key);
+                }
+                (int currentLeft, int currentTop) = GetCursorPosition();
+                if (left == WINDOW_WIDTH - 2)
+                {
+                    Console.SetCursorPosition(left - 1, top);
+                    Console.Write(" ");
+                    Console.SetCursorPosition(left - 1, top);
+                }
+                if (key == (char)8)
+                {
+                    if (command.Length > 0)
+                    {
+                        command.Remove(command.Length - 1, 1);
+                    }
+                    if (currentLeft >= left)
+                    {
+                        Console.SetCursorPosition(currentLeft, top);
+                        Console.Write(" ");
+                        Console.SetCursorPosition(currentLeft, top);
+                    }
+                    else
+                    {
+                        Console.SetCursorPosition(left, top);
+                    }
+                }
+                
+            }
+            while (key!=(char)13);
+            (int currentLeft1, int currentTop1) = GetCursorPosition();
+            while (currentLeft1 >= left)
+            {
+                Console.SetCursorPosition(currentLeft1, top);
+                Console.Write(" ");
+                
+            }
+            CommandParser(command.ToString());
+        }
+
+        static void CommandParser(string command)
+        {
+            string[] commandParams = command.ToLower().Split(' ');
+            DrawAllWindow(0, 0);
+            ProccesEnterComand();
+        }
+
+        /// <summary>
+        /// Получить координаты позиции курсора
+        /// </summary>
+        /// <returns></returns>
+        static (int left, int top) GetCursorPosition() =>
+            (Console.CursorLeft, Console.CursorTop);
+
         /// <summary>
         /// Отрисовка рабочей области
         /// </summary>
@@ -44,7 +122,7 @@ namespace File_Manager
             }
             Console.Write("╗");
             Console.SetCursorPosition(x, y + 1);
-            for (int i = 0; i < WINDOW_HEIGHT - 16; i++)
+            for (int i = 0; i < WINDOW_HEIGHT - 16; i++) 
             {
                 Console.Write("║");
                 for (int j = x + 1; j < WINDOW_WIDTH - 1 + x; j++)
@@ -89,8 +167,21 @@ namespace File_Manager
                 Console.Write("═");
             }
             Console.Write("╝");
+            Console.SetCursorPosition(2, WINDOW_HEIGHT - 12);
+            Console.Write("Дата создания файла: ");
+            Console.SetCursorPosition(2, WINDOW_HEIGHT - 10);
+            Console.Write("Дата последнего открытия: ");
+            Console.SetCursorPosition(2, WINDOW_HEIGHT - 8);
+            Console.Write("Дата последнего изменения: ");
+            Console.SetCursorPosition(85, WINDOW_HEIGHT - 12);
+            Console.Write("Разширение: ");
+            Console.SetCursorPosition(85, WINDOW_HEIGHT - 10);
+            Console.Write("Размер в байтах: ");
+            Console.SetCursorPosition(85, WINDOW_HEIGHT - 8);
+            Console.Write("Имя: ");
 
             //Отрисовка окна Командная строка
+            Console.SetCursorPosition(0, WINDOW_HEIGHT - 5);
             Console.Write("╔");
             for (int i = 0; i < WINDOW_WIDTH - 2; i++)
             {
