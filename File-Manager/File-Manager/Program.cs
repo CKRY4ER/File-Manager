@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,13 +85,89 @@ namespace File_Manager
             CommandParser(command.ToString());
         }
 
+        /// <summary>
+        /// Парсер команды
+        /// </summary>
+        /// <param name="command">команда</param>
         static void CommandParser(string command)
         {
+            //Переменная нужна для корректной работы try catch блока
+            string diskName = currentDir[0].ToString() + currentDir[1].ToString() + currentDir[2].ToString();
             string[] commandParams = command.ToLower().Split(' ');
+            switch (commandParams[0])
+            {
+                case ("cd"):
+                    if (commandParams.Length < 2) 
+                    {
+                        MessageBox.Show("Не верный формат команды cd [путь] | [ . ]", "Ошибка", MessageBoxButtons.OK);
+                        break;
+                    }
+                    if (commandParams[1]==null||commandParams[1] == "")
+                    {
+                        MessageBox.Show("Не верный формат команды cd [путь] | [ . ]", "Ошибка", MessageBoxButtons.OK);
+                        break;
+                    }
+                    if (commandParams[1]==".")
+                    {
+                        currentDir = Directory.GetParent(currentDir)?.ToString();
+                        if (currentDir == null)
+                            currentDir = diskName;
+                        break;
+                    }
+                    if (Directory.Exists(commandParams[1]))
+                    {
+                        currentDir = commandParams[1];
+                        listCommand.Add(command);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Указанной дирректории не существует", "Ошибка", MessageBoxButtons.OK);
+                    }
+                    break;
+                default:
+                    MessageBox.Show("Не верная команда", "Ошибка", MessageBoxButtons.OK);
+                    break;
+            }
             DrawAllWindow(0, 0);
             ProccesEnterComand();
         }
-
+        /// <summary>
+        /// Отрисовать дерево каталогов
+        /// </summary>
+        /// <param name="dir">Дирректория отрисовки</param>
+        /// <param name="page">Страница</param>
+        static void DrawTree(DirectoryInfo dir, int page)
+        {
+            StringBuilder tree = new StringBuilder();
+            GetTree(tree, dir, "", true);
+        }
+        /// <summary>
+        /// Собрать дерево
+        /// </summary>
+        /// <param name="tree">Дерево</param>
+        /// <param name="dir">Дирректория для отрисовки</param>
+        /// <param name="indent"></param>
+        /// <param name="lastDirectory">Конечная дирректория в списке</param>
+        static void GetTree(StringBuilder tree, DirectoryInfo dir, string indent, bool lastDirectory) 
+        {
+            tree.Append(indent);
+            if (lastDirectory)
+            {
+                tree.Append("└");
+                indent += "  ";
+            }
+            else
+            {
+                tree.Append("├─");
+                indent += "│ ";
+            }
+            tree.Append($"{dir.Name}\n");
+            DirectoryInfo[] subDirs = dir.GetDirectories();
+            for(int i = 0; i < subDirs.Length; i++)
+            {
+                GetTree(tree, subDirs[i], indent, i == subDirs.Length - 1);
+            }
+        }
         /// <summary>
         /// Получить координаты позиции курсора
         /// </summary>
