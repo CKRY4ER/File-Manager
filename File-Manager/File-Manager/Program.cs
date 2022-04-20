@@ -91,8 +91,15 @@ namespace File_Manager
         /// <param name="command">команда</param>
         static void CommandParser(string command)
         {
-            //Переменная нужна для корректной работы try catch блока
-            string diskName = currentDir[0].ToString() + currentDir[1].ToString() + currentDir[2].ToString();
+            string diskName = "";
+            try
+            {
+                diskName = currentDir[0].ToString() + currentDir[1].ToString() + currentDir[2].ToString();
+            }
+            catch (Exception e)
+            {
+
+            }
             string[] commandParams = command.ToLower().Split(' ');
             switch (commandParams[0])
             {
@@ -118,17 +125,44 @@ namespace File_Manager
                     {
                         currentDir = commandParams[1];
                         listCommand.Add(command);
+                        DrawAllWindow(0, 0);
                     }
                     else
                     {
                         MessageBox.Show("Указанной дирректории не существует", "Ошибка", MessageBoxButtons.OK);
                     }
                     break;
+                case ("ls"):
+                    if (commandParams.Length != 4 || commandParams[2] != "-p") 
+                    {
+                        MessageBox.Show("Не верный формат команды ls: ls [дирректория] [-p] [номер страницы].", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
+                        break;
+                    }
+                    if (!Directory.Exists(commandParams[1]))
+                    {
+                        MessageBox.Show("Указанной дирректории не существует", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
+                        break;
+                    }
+                    if (commandParams[3] == "")
+                    {
+                        DrawAllWindow(0, 0);
+                        DrawTree(new DirectoryInfo(commandParams[1]), 1);
+                        
+                    }
+                    else
+                    {
+                        DrawAllWindow(0, 0);
+                        (int left, int top) = GetCursorPosition();
+                        DrawTree(new DirectoryInfo(commandParams[1]), int.Parse(commandParams[3]));
+                    }
+                    listCommand.Add(command);
+                    break;
                 default:
                     MessageBox.Show("Не верная команда", "Ошибка", MessageBoxButtons.OK);
                     break;
             }
-            DrawAllWindow(0, 0);
             ProccesEnterComand();
         }
         /// <summary>
@@ -140,6 +174,27 @@ namespace File_Manager
         {
             StringBuilder tree = new StringBuilder();
             GetTree(tree, dir, "", true);
+            (int currentLeft, int currentTop) = (0, 0);
+            int pageLines=29;
+            string[] lines = tree.ToString().Split('\n');
+            int pageTotal = (lines.Length + pageLines - 1) / pageLines;
+            if (page > pageTotal)
+            {
+                page = pageTotal;
+            }
+            for (int i = (page - 1) * pageLines, counter = 0; i < page * pageLines; i++, counter++)
+            {
+                if (lines.Length - 1 > i)
+                {
+                    Console.SetCursorPosition(currentLeft + 1, currentTop + 1 + counter);
+                    Console.WriteLine(lines[i]);
+                }
+            }
+
+            //Надпись показывающая, номер страницы и общее кол-во страниц
+            string footer = $"╡ {page} из {pageTotal} ╞";
+            Console.SetCursorPosition(WINDOW_WIDTH/2 - footer.Length/2, 30);
+            Console.WriteLine(footer);
         }
         /// <summary>
         /// Собрать дерево
@@ -153,7 +208,7 @@ namespace File_Manager
             tree.Append(indent);
             if (lastDirectory)
             {
-                tree.Append("└");
+                tree.Append("└─");
                 indent += "  ";
             }
             else
@@ -162,6 +217,18 @@ namespace File_Manager
                 indent += "│ ";
             }
             tree.Append($"{dir.Name}\n");
+            FileInfo[] subFiles = dir.GetFiles();
+            for(int i = 0; i < subFiles.Length; i++)
+            {
+                if (i == subFiles.Length - 1)
+                {
+                    tree.Append($"{indent}└─{subFiles[i].Name}\n");
+                }
+                else
+                {
+                    tree.Append($"{indent}├─{subFiles[i].Name}\n");
+                }
+            }
             DirectoryInfo[] subDirs = dir.GetDirectories();
             for(int i = 0; i < subDirs.Length; i++)
             {
