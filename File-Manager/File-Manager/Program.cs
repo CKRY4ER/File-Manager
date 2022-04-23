@@ -107,11 +107,13 @@ namespace File_Manager
                     if (commandParams.Length < 2) 
                     {
                         MessageBox.Show("Не верный формат команды cd [путь] | [ . ]", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
                         break;
                     }
                     if (commandParams[1]==null||commandParams[1] == "")
                     {
                         MessageBox.Show("Не верный формат команды cd [путь] | [ . ]", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
                         break;
                     }
                     if (commandParams[1]==".")
@@ -119,6 +121,7 @@ namespace File_Manager
                         currentDir = Directory.GetParent(currentDir)?.ToString();
                         if (currentDir == null)
                             currentDir = diskName;
+                        DrawAllWindow(0, 0);
                         break;
                     }
                     if (Directory.Exists(commandParams[1]))
@@ -130,6 +133,7 @@ namespace File_Manager
                     else
                     {
                         MessageBox.Show("Указанной дирректории не существует", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
                     }
                     break;
                 case ("ls"):
@@ -159,8 +163,73 @@ namespace File_Manager
                     }
                     listCommand.Add(command);
                     break;
+                    //Принцип работы: после команды cp необходимо ввести полный путь до файла или дирректории которую необходимо скопировать.
+                    //Копирование происходит в текущую дирректорию (currentDir). Если будет время, реализую
+                    //копирование в другую дирректорию, путем ввода третьего параметра в команду (cp c:\someDir c:\newDir)
+                case ("cp"):
+                    if (commandParams.Length > 1 && commandParams.Length <= 2) 
+                    {
+                        //Определяем, ввел ли пользователь путь к файлу/дирректории или название
+                        if (commandParams[1].Contains('\\') || commandParams[1].Contains(':'))
+                        {
+                            //Определяем, файл ли это?
+                            if (File.Exists(commandParams[1]))
+                            {
+                                string fileName = Path.GetFileName(commandParams[1]);
+                                //Проверяем, существует ли данный файл в currentDir
+                                if (!File.Exists(currentDir + fileName))
+                                {
+                                    string path = Path.Combine(currentDir, fileName);
+                                    File.Copy(commandParams[1], path);
+                                    listCommand.Add(command);
+                                    DrawAllWindow(0, 0);
+                                    break;
+                                }
+                                else
+                                {
+                                    MessageBox.Show($"Файл {fileName} уже существует в {currentDir}", "Ошибка", MessageBoxButtons.OK);
+                                    listCommand.Add(command);
+                                    DrawAllWindow(0, 0);
+                                    break;
+                                }
+                            }
+                            //Проверка на дирректорию
+                            else if (Directory.Exists(commandParams[1]))
+                            {
+                                string dirName = Path.GetFileName(commandParams[1]);
+                                if (!Directory.Exists(currentDir + dirName))
+                                {
+                                    Directory.CreateDirectory(Path.Combine(currentDir, dirName));
+                                    string[] files = Directory.GetFiles(commandParams[1]);
+                                    //Копируем все файлы указанной дирр. в currentDir
+                                    foreach(string s in files)
+                                    {
+                                        string fileName = Path.GetFileName(s);
+                                        string destination = Path.Combine(currentDir + dirName, fileName);
+                                        File.Copy(s, destination, true);
+                                    }
+                                }
+                                else
+                                {
+                                    MessageBox.Show($"Дирректория {dirName} уже существует в {currentDir}", "Ошибка", MessageBoxButtons.OK);
+                                }
+                                DrawAllWindow(0, 0);
+                                listCommand.Add(command);
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Не верный формат команды cp: cp [путь до дирр/файла]", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
+                    }
+                    break;
+                case ("rm"):
+                    break;
                 default:
                     MessageBox.Show("Не верная команда", "Ошибка", MessageBoxButtons.OK);
+                    DrawAllWindow(0, 0);
                     break;
             }
             ProccesEnterComand();
