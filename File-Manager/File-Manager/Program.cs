@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace File_Manager
 {
@@ -126,7 +125,8 @@ namespace File_Manager
                     }
                     if (Directory.Exists(commandParams[1]))
                     {
-                        currentDir = commandParams[1];
+                        string path = Path.GetFullPath(commandParams[1]);
+                        currentDir = path;
                         listCommand.Add(command);
                         DrawAllWindow(0, 0);
                     }
@@ -226,7 +226,28 @@ namespace File_Manager
                     }
                     break;
                 case ("rm"):
-
+                    if (commandParams.Length == 2)
+                    {
+                        if (File.Exists(commandParams[1]))
+                        {
+                            File.Delete(commandParams[1]);
+                        }
+                        else if (Directory.Exists(commandParams[1])) 
+                        {
+                            DeleteDirrectory(commandParams[1]);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Данного файла или репозитория не существует", "Ошибка", MessageBoxButtons.OK);
+                        }
+                        listCommand.Add(command);
+                        DrawAllWindow(0, 0);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Не верный формат команды rm: rm [путь до файла/дирректории]", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
+                    }
                     break;
                 case ("inf"):
                     if (commandParams.Length == 2)
@@ -267,6 +288,35 @@ namespace File_Manager
                     break;
             }
             ProccesEnterComand();
+        }
+        /// <summary>
+        /// Рекурсивное удаление дирректории
+        /// </summary>
+        /// <param name="pathToDirr"></param>
+        static void DeleteDirrectory(string pathToDirr)
+        {
+            //Удаление всех файлов в данной дирректории
+            string[] pathToFile = Directory.GetFiles(pathToDirr);
+            foreach(string file in pathToFile)
+            {
+                File.Delete(file);
+            }
+            //Получение путей до всех вложенных дирректорий даноой дирректории
+            string[] dirs = Directory.GetDirectories(pathToDirr);
+            //Массив, содержащий полную инф. о каждой вложенной дирр.
+            DirectoryInfo[] dirInfo = new DirectoryInfo[dirs.Length];
+            if (dirs != null)
+            {
+                for (int i = 0; i != dirs.Length; i++)
+                {
+                    dirInfo[i] = new DirectoryInfo(dirs[i]);
+                }
+                for (int i=0; i<dirInfo.Length; i++)
+                {
+                    DeleteDirrectory(dirInfo[i].FullName);
+                }
+            }
+            Directory.Delete(pathToDirr);
         }
         /// <summary>
         /// Очистка поля вводы команды
