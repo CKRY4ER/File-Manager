@@ -226,6 +226,40 @@ namespace File_Manager
                     }
                     break;
                 case ("rm"):
+
+                    break;
+                case ("inf"):
+                    if (commandParams.Length == 2)
+                    {
+                        if (File.Exists(commandParams[1]))
+                        {
+                            FileInfo file = new FileInfo(commandParams[1]);
+                            DrawAllWindow(0, 0);
+                            Console.SetCursorPosition(29, 33);
+                            Console.Write(file.CreationTime);
+                            Console.SetCursorPosition(29, 35);
+                            Console.Write(file.LastAccessTime);
+                            Console.SetCursorPosition(29, 37);
+                            Console.Write(file.LastWriteTime);
+                            Console.SetCursorPosition(104, 33);
+                            Console.Write(file.Extension);
+                            Console.SetCursorPosition(104, 35);
+                            Console.Write(file.Length);
+                            Console.SetCursorPosition(104, 37);
+                            Console.Write(file.Name);
+                            listCommand.Add(command);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Указанного файла не существует", "Ошибка", MessageBoxButtons.OK);
+                            DrawAllWindow(0, 0);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Не верный формат команды inf: inf [путь файла]", "Ошибка", MessageBoxButtons.OK);
+                        DrawAllWindow(0, 0);
+                    }
                     break;
                 default:
                     MessageBox.Show("Не верная команда", "Ошибка", MessageBoxButtons.OK);
@@ -233,6 +267,13 @@ namespace File_Manager
                     break;
             }
             ProccesEnterComand();
+        }
+        /// <summary>
+        /// Очистка поля вводы команды
+        /// </summary>
+        static void ClearBuffer()
+        {
+
         }
         /// <summary>
         /// Отрисовать дерево каталогов
